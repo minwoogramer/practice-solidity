@@ -13,11 +13,16 @@ contract ZombieFactory {
     }
 
     Zombie[] public zombies;
+    mapping(uint256 => address) public zombieToOwner;
+    mapping(address => uint256) ownerZombieCount;
 
-    function _createZombie(string memory _name, uint256 _dna) private {
+    function _createZombie(string memory _name, uint256 _dna) internal {
         // 여기서 이벤트 실행
         zombies.push(Zombie(_name, _dna));
-        uint256 id = zombies.length - 1; //배열의 첫 원소가 0이라는 인덱스를 갖기 때문에 array.push() -1로 해줘야 막 추가된 좀비의 인덱스가됌
+        uint256 id = zombies.length - 1;
+        zombieToOwner[id] = msg.sender;
+        ownerZombieCount[msg.sender]++;
+        //배열의 첫 원소가 0이라는 인덱스를 갖기 때문에 array.push() -1로 해줘야 막 추가된 좀비의 인덱스가됌
         emit NewZombie(id, _name, _dna); //이벤트실행
     }
 
@@ -31,7 +36,9 @@ contract ZombieFactory {
     }
 
     function createRandomZombie(string memory _name) public {
+        require(ownerZombieCount[msg.sender] == 0);
         uint256 randDna = _generateRandomDna(_name);
+        randDna = randDna - (randDna % 100);
         _createZombie(_name, randDna);
     }
 }
